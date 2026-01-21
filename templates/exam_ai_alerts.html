@@ -111,6 +111,10 @@
   {% endif %}
 
   <style>
+    /* Make every text in the main content area black, including numbers */
+    .alert-summary, .alert-summary *, .card, .card *, .form-label, .form-select, .alert, .alert * {
+      color: #000 !important;
+    }
     .alert-card {
       transition: transform 0.2s;
     }
@@ -126,6 +130,11 @@
     }
     .violation-details ul {
       margin-bottom: 0;
+    }
+    /* Force black text and readable background for success alert */
+    .alert.alert-success {
+      color: #000 !important;
+      background-color: #e6f9ee !important;
     }
   </style>
 
