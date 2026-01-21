@@ -9,12 +9,16 @@
       -ms-user-select: none;
       user-select: none;
     }
-    /* Allow selection in agent section */
+    /* Allow selection in agent section and force black text */
     .agent-section {
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
       user-select: text;
+      color: #000 !important;
+    }
+    .agent-section * {
+      color: #000 !important;
     }
     /* Screenshot prevention overlay */
     .screenshot-overlay {
@@ -62,13 +66,13 @@
     <button id="begin-btn" class="btn btn-lg btn-primary">Enter Fullscreen &amp; Begin Exam</button>
   </div>
 
-  <div class="mb-3 p-3 bg-light border rounded agent-section">
+  <div class="mb-3 p-3 bg-light border rounded agent-section" style="color: #000 !important;">
     <h5>Optional: Native Monitoring Agent</h5>
     <p>If you install the provided native monitoring agent on your Windows machine, it can report which application/window is active when you switch away from the exam. This requires you to run the agent locally and paste the token below into the agent so it can send reports for this attempt.</p>
     <p><strong>Attempt ID:</strong> <code>{{ attempt.id }}</code></p>
     <p><strong>Agent Token:</strong> <code id="agent-token">{{ attempt.agent_token or 'not-available' }}</code></p>
     <p><a href="{{ url_for('static', filename='exam_proctor_extension.zip') }}" download>Download Browser Extension</a> (Recommended for enhanced security)</p>
-    <p class="small text-muted">Instructions: Download the extension, unzip, go to Chrome Extensions (chrome://extensions/), enable Developer Mode, load unpacked, and select the folder. The extension will automatically close other tabs and provide token copying.</p>
+    <p class="small text-muted" style="color: #000 !important;">Instructions: Download the extension, unzip, go to Chrome Extensions (chrome://extensions/), enable Developer Mode, load unpacked, and select the folder. The extension will automatically close other tabs and provide token copying.</p>
   </div>
 
   <form method="post" id="exam-form" style="display:none">
