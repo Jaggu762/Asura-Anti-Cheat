@@ -43,8 +43,9 @@ jobs:
         run: |
           python - <<'PY'
           import app
-          app.init_app()
-          print("App import + init_app() succeeded")
+          with app.app.app_context():
+            app.db.create_all()
+          print("App import + database schema initialization succeeded")
           PY
 
       - name: Runtime smoke test (start server + health URL)
