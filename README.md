@@ -21,10 +21,11 @@ Asura is a comprehensive Flask-based online examination platform with advanced a
 8. [Real-Time Monitoring](#real-time-monitoring)
 9. [Native Monitoring Toolkit](#native-monitoring-toolkit-windows)
 10. [Browser Extension](#browser-extension)
-11. [Configuration](#configuration)
-12. [Security & Privacy](#security--privacy)
-13. [Tech Stack](#tech-stack)
-14. [Contributing](#contributing)
+11. [CI/CD Automation](#cicd-automation-github-actions)
+12. [Configuration](#configuration)
+13. [Security & Privacy](#security--privacy)
+14. [Tech Stack](#tech-stack)
+15. [Contributing](#contributing)
 
 ---
 
@@ -363,6 +364,64 @@ pip install pywin32 psutil requests
 - Timestamp for all events
 
 ---
+
+## CI/CD Automation (GitHub Actions)
+
+This repository now includes a workflow at `.github/workflows/ci-cd.yml` that:
+
+- Runs on every push and pull request
+- Installs Python dependencies
+- Performs syntax checks on all tracked Python files
+- Imports and initializes the Flask app/database to catch startup errors
+- Performs a runtime smoke test by starting the app and checking `/login`
+
+If all checks pass and the push is to `main`, it automatically deploys using a self-hosted GitHub Actions runner on your VPS.
+
+### Self-Hosted Runner Setup (VPS)
+
+On your VPS, register a GitHub Actions runner for this repository:
+
+```bash
+# Create runner folder
+mkdir -p /opt/actions-runner && cd /opt/actions-runner
+
+# Download runner package from GitHub UI instructions for your repo
+# Extract and configure with the provided URL/token
+./config.sh --url https://github.com/hyperdargo/Asura-Anti-Cheat --token <RUNNER_TOKEN>
+
+# Install and start as service
+sudo ./svc.sh install
+sudo ./svc.sh start
+```
+
+Use labels including `self-hosted` and `linux`.
+
+### Required GitHub Repository Variables (for auto-deploy)
+
+Add these in **GitHub Repository Settings → Secrets and variables → Actions → Variables**:
+
+- `DEPLOY_APP_DIR` (absolute deployment directory on VPS, e.g. `/opt/asura`)
+
+Optional:
+
+- `DEPLOY_SERVICE_NAME` (systemd service name, default: `asura`)
+
+### Deployment Behavior
+
+On successful validation:
+
+1. Syncs workflow checkout into `DEPLOY_APP_DIR`
+2. Recreates/updates virtual environment
+3. Installs `requirements.txt`
+4. Restarts your systemd service (`asura` by default)
+
+Make sure your production server already has:
+
+- A registered self-hosted GitHub Actions runner for this repo
+- Python 3 and `python3-venv` installed
+- `rsync` installed
+- A systemd unit for your app (or adjust the workflow command)
+- `sudo` permissions for runner user to restart the service
 
 ## Configuration
 
