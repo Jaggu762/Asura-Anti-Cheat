@@ -375,7 +375,7 @@ This repository now includes a workflow at `.github/workflows/ci-cd.yml` that:
 - Imports and initializes the Flask app/database to catch startup errors
 - Performs a runtime smoke test by starting the app and checking `/login`
 
-If all checks pass and the push is to `main`, it automatically deploys using a self-hosted GitHub Actions runner on your VPS.
+If all checks pass and the push is to `dev`, it automatically deploys using a self-hosted GitHub Actions runner on your VPS.
 
 ### Self-Hosted Runner Setup (VPS)
 
