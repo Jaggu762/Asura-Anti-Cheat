@@ -55,11 +55,13 @@ jobs:
           HOST: 127.0.0.1
           PORT: 5001
         run: |
+          SMOKE_TEST_URL="http://${HOST}:${PORT}/login"
+
           python app.py > server.log 2>&1 &
           APP_PID=$!
 
           for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:5001/login > /dev/null; then
+            if curl -fsS "$SMOKE_TEST_URL" > /dev/null; then
               echo "Server smoke test passed"
               kill "$APP_PID"
               wait "$APP_PID" 2>/dev/null || true
