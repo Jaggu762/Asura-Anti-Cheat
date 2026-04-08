@@ -1,43 +1,100 @@
 {% extends 'base.html' %}
-{% block title %}Attempt Activity Log{% endblock %}
+{% block title %}Activity Log — Asura{% endblock %}
 {% block content %}
-  <h2>Activity Log for Attempt #{{ attempt.id }} ({{ attempt_user if attempt_user is defined else '' }})</h2>
-  <p>Exam: <strong>{{ exam.title }}</strong> | Student ID: {{ attempt.user_id }} | Started: {{ attempt.started_at }} | Finished: {{ attempt.finished_at or 'In progress' }}</p>
 
-  <p>
-    <a class="btn btn-secondary" href="{{ url_for('view_attempt', attempt_id=attempt.id) }}">Back to Attempt</a>
-    <a class="btn btn-outline-primary" href="{{ url_for('view_attempt_events', attempt_id=attempt.id) }}?export=csv">Export CSV</a>
-  </p>
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-journal-code"></i></div>
+    <div class="ph-text">
+      <h2>Activity Log — Attempt #{{ attempt.id }}</h2>
+      <p>{{ attempt_user if attempt_user is defined else '' }}</p>
+    </div>
+  </div>
+
+  <!-- Meta bar -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-sm-3">
+          <span style="font-size:.75rem;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.6px;">Exam</span>
+          <div style="font-weight:600;">{{ exam.title }}</div>
+        </div>
+        <div class="col-sm-3">
+          <span style="font-size:.75rem;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.6px;">Student ID</span>
+          <div>{{ attempt.user_id }}</div>
+        </div>
+        <div class="col-sm-3">
+          <span style="font-size:.75rem;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.6px;">Started</span>
+          <div>{{ attempt.started_at }}</div>
+        </div>
+        <div class="col-sm-3">
+          <span style="font-size:.75rem;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.6px;">Finished</span>
+          <div>{{ attempt.finished_at or '—' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-4 d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('view_attempt', attempt_id=attempt.id) }}">
+      <i class="bi bi-arrow-left me-1"></i>Back to Attempt
+    </a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('view_attempt_events', attempt_id=attempt.id) }}?export=csv">
+      <i class="bi bi-download me-1"></i>Export CSV
+    </a>
+  </div>
 
   {% if records %}
-    <div class="table-responsive">
-      <table class="table table-sm table-striped">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Timestamp</th>
-            <th>Event</th>
-            <th>Details</th>
-            <th>IP</th>
-            <th>User-Agent</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in records %}
+    <div class="table-wrap">
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
             <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ r.ts }}</td>
-              <td>{{ r.event }}</td>
-              <td><pre style="white-space:pre-wrap">{{ (r.data | tojson) if r.data is defined else '' }}</pre></td>
-              <td>{{ r.ip }}</td>
-              <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ r.ua }}</td>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Event</th>
+              <th>Details</th>
+              <th>IP</th>
+              <th>User-Agent</th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {% for r in records %}
+              <tr>
+                <td style="color:var(--txt-muted);">{{ loop.index }}</td>
+                <td style="white-space:nowrap;font-size:.8rem;color:var(--txt-muted);">{{ r.ts }}</td>
+                <td>
+                  <span class="event-tag">{{ r.event }}</span>
+                </td>
+                <td><pre class="mb-0" style="max-width:320px;">{{ (r.data | tojson) if r.data is defined else '' }}</pre></td>
+                <td style="font-size:.82rem;color:var(--txt-muted);">{{ r.ip }}</td>
+                <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem;color:var(--txt-muted);">{{ r.ua }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   {% else %}
-    <p>No recorded activity for this attempt.</p>
+    <div class="card">
+      <div class="card-body text-center" style="padding:2rem !important;color:var(--txt-muted);">
+        <i class="bi bi-journal-x d-block mb-2" style="font-size:1.5rem;"></i>
+        No activity recorded for this attempt.
+      </div>
+    </div>
   {% endif %}
+
+  <style>
+    .event-tag {
+      display: inline-block;
+      font-size: .75rem;
+      font-weight: 600;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--border-strong);
+      padding: .18em .6em;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+  </style>
 
 {% endblock %}

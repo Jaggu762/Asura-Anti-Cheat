@@ -1,20 +1,46 @@
 {% extends 'base.html' %}
-{% block title %}Add Question{% endblock %}
+{% block title %}Add Question — Asura{% endblock %}
 {% block content %}
-  <h2>Add Question for {{ exam.title }}</h2>
-  <form method="post">
-    <div class="mb-3">
-      <label class="form-label">Question text</label>
-      <textarea class="form-control" name="text" required></textarea>
+
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-plus-circle"></i></div>
+    <div class="ph-text">
+      <h2>Add Question</h2>
+      <p>Exam: <strong style="color:var(--txt-primary);">{{ exam.title }}</strong></p>
     </div>
-    <div class="mb-3">
-      <label class="form-label">Choices (one per line)</label>
-      <textarea class="form-control" name="choices" required></textarea>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-xl-6">
+      <div class="card">
+        <div class="card-body">
+          <form method="post">
+            <div class="mb-3">
+              <label class="form-label">Question Text</label>
+              <textarea class="form-control" name="text" rows="3" placeholder="Enter the question…" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Answer Choices</label>
+              <textarea class="form-control" name="choices" rows="4" placeholder="One choice per line…" required></textarea>
+              <div class="form-text">Enter each answer option on a new line.</div>
+            </div>
+            <div class="mb-4">
+              <label class="form-label">Correct Answer Index (0-based)</label>
+              <input class="form-control" name="correct" placeholder="e.g. 0 for the first choice" required>
+              <div class="form-text">0 = first choice, 1 = second choice, etc.</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary" type="submit">
+                <i class="bi bi-plus-lg me-2"></i>Add Question
+              </button>
+              <a class="btn btn-secondary" href="{{ url_for('teacher_exams') }}">
+                <i class="bi bi-x me-1"></i>Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    <div class="mb-3">
-      <label class="form-label">Correct choice index (0-based)</label>
-      <input class="form-control" name="correct" required>
-    </div>
-    <button class="btn btn-primary" type="submit">Add</button>
-  </form>
+  </div>
+
 {% endblock %}

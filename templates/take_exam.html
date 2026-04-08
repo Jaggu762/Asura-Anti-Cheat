@@ -1,94 +1,218 @@
 {% extends 'base.html' %}
-{% block title %}Take Exam{% endblock %}
+{% block title %}Take Exam — {{ exam.title }}{% endblock %}
 {% block content %}
   <style>
-    /* Disable text selection and copying */
+    /* Security: disable selection and copying */
     body {
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
     }
-    /* Allow selection in agent section and force black text */
+    /* Allow selection in agent section */
     .agent-section {
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
       user-select: text;
-      color: #000 !important;
-    }
-    .agent-section * {
-      color: #000 !important;
     }
     /* Screenshot prevention overlay */
     .screenshot-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background-color: white;
       z-index: 9999;
       display: none;
       opacity: 0;
       transition: none;
     }
-    .screenshot-overlay.active {
-      opacity: 1;
-    }
+    .screenshot-overlay.active { opacity: 1; }
+
     .fullscreen-exit-overlay {
       position: fixed;
       inset: 0;
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.92);
+      background: rgba(0,0,0,.96);
       color: #fff;
       z-index: 10000;
       text-align: center;
       padding: 2rem;
     }
+
+    /* Exam-specific styles */
+    .exam-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .exam-title { font-size: 1.5rem; font-weight: 700; margin-bottom: .25rem; }
+    .exam-desc  { color: var(--txt-secondary); margin-bottom: 0; }
+
+    .timer-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-md);
+      padding: .75rem 1.25rem;
+      margin-bottom: 1.5rem;
+      font-size: .9rem;
+      font-weight: 500;
+      color: var(--clr-info);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .timer-bar.urgent { color: var(--clr-danger); border-color: rgba(248,113,113,.35); background: rgba(248,113,113,.06); }
+
+    .fullscreen-prompt {
+      background: linear-gradient(135deg, rgba(245,158,11,.1), rgba(245,158,11,.06));
+      border: 1px solid rgba(245,158,11,.25);
+      border-radius: var(--r-lg);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .fullscreen-prompt h4 { color: var(--clr-warning) !important; }
+    .fullscreen-prompt p { color: var(--txt-secondary); }
+
+    .agent-section {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .agent-section * { color: var(--txt-primary) !important; }
+    .agent-section code { color: #c084fc !important; }
+    .agent-section .text-muted { color: var(--txt-muted) !important; }
+
+    .question-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.375rem;
+      margin-bottom: 1rem;
+    }
+    .question-card .q-label {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: var(--txt-muted);
+      margin-bottom: .6rem;
+    }
+    .question-card .q-text {
+      font-weight: 600;
+      font-size: .95rem;
+      color: var(--txt-primary);
+      margin-bottom: 1rem;
+    }
+    .choice-option {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .65rem .875rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      cursor: pointer;
+      transition: border-color .18s, background .18s;
+      margin-bottom: .5rem;
+    }
+    .choice-option:hover { border-color: var(--border-strong); background: rgba(79,142,247,.04); }
+    .choice-option input[type="radio"] { flex-shrink: 0; }
+    .choice-option label { color: var(--txt-secondary) !important; cursor: pointer; margin: 0; font-size: .9rem; }
+    .choice-option:has(input:checked) {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .choice-option:has(input:checked) label { color: var(--txt-primary) !important; font-weight: 500; }
   </style>
-  <!-- Screenshot prevention overlay -->
+
+  <!-- Overlays -->
   <div id="screenshotOverlay" class="screenshot-overlay"></div>
   <div id="fullscreenExitOverlay" class="fullscreen-exit-overlay">
     <div>
+      <i class="bi bi-shield-x" style="font-size:3rem;color:#f87171;display:block;margin-bottom:1rem;"></i>
       <h3>Fullscreen Ended</h3>
       <p>Your attempt has been finalized because fullscreen was interrupted.</p>
     </div>
   </div>
-  <h2>{{ exam.title }}</h2>
-  <p>{{ exam.description }}</p>
-  <div id="timer" class="mb-3 alert alert-info"></div>
-  <div id="enter-fullscreen" class="mb-3 p-4 bg-warning rounded">
+
+  <!-- Exam header -->
+  <div class="exam-header">
+    <div class="exam-title">{{ exam.title }}</div>
+    {% if exam.description %}
+      <p class="exam-desc">{{ exam.description }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Timer -->
+  <div id="timer" class="timer-bar">
+    <i class="bi bi-clock"></i>
+    <span id="timer-text">Loading timer…</span>
+  </div>
+
+  <!-- Fullscreen prompt -->
+  <div id="enter-fullscreen" class="fullscreen-prompt">
+    <i class="bi bi-fullscreen" style="font-size:2rem;color:var(--clr-warning);display:block;margin-bottom:.75rem;"></i>
     <h4>Enter Fullscreen to Begin</h4>
-    <p>For exam integrity, please enter fullscreen. The exam will start once you enter fullscreen. Exiting fullscreen will finalize and submit your attempt.</p>
-    <button id="begin-btn" class="btn btn-lg btn-primary">Enter Fullscreen &amp; Begin Exam</button>
+    <p>For exam integrity, you must be in fullscreen mode. Exiting fullscreen will automatically finalize and submit your attempt.</p>
+    <button id="begin-btn" class="btn btn-warning btn-lg pulse">
+      <i class="bi bi-play-fill me-2"></i>Enter Fullscreen &amp; Begin
+    </button>
   </div>
 
-  <div class="mb-3 p-3 bg-light border rounded agent-section" style="color: #000 !important;">
-    <h5>Optional: Native Monitoring Agent</h5>
-    <p>If you install the provided native monitoring agent on your Windows machine, it can report which application/window is active when you switch away from the exam. This requires you to run the agent locally and paste the token below into the agent so it can send reports for this attempt.</p>
-    <p><strong>Attempt ID:</strong> <code>{{ attempt.id }}</code></p>
-    <p><strong>Agent Token:</strong> <code id="agent-token">{{ attempt.agent_token or 'not-available' }}</code></p>
-    <p><a href="{{ url_for('static', filename='exam_proctor_extension.zip') }}" download>Download Browser Extension</a> (Recommended for enhanced security)</p>
-    <p class="small text-muted" style="color: #000 !important;">Instructions: Download the extension, unzip, go to Chrome Extensions (chrome://extensions/), enable Developer Mode, load unpacked, and select the folder. The extension will automatically close other tabs and provide token copying.</p>
+  <!-- Agent section -->
+  <div class="agent-section" style="-webkit-user-select:text;">
+    <h6 class="mb-2" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.7px;color:var(--txt-muted) !important;font-weight:600;">
+      <i class="bi bi-cpu me-2"></i>Optional: Native Monitoring Agent
+    </h6>
+    <p style="font-size:.875rem;">If you install the native monitoring agent on your Windows machine, it can report which application is active when you switch away from the exam.</p>
+    <div class="row g-2 mb-2">
+      <div class="col-sm-6">
+        <span style="font-size:.75rem;color:var(--txt-muted) !important;text-transform:uppercase;letter-spacing:.5px;">Attempt ID</span>
+        <div><code>{{ attempt.id }}</code></div>
+      </div>
+      <div class="col-sm-6">
+        <span style="font-size:.75rem;color:var(--txt-muted) !important;text-transform:uppercase;letter-spacing:.5px;">Agent Token</span>
+        <div><code id="agent-token">{{ attempt.agent_token or 'not-available' }}</code></div>
+      </div>
+    </div>
+    <a href="{{ url_for('static', filename='exam_proctor_extension.zip') }}" download class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-download me-1"></i>Download Browser Extension
+    </a>
+    <p class="mt-2 mb-0" style="font-size:.78rem;color:var(--txt-muted) !important;">
+      Unzip, go to chrome://extensions/, enable Developer Mode, load unpacked, and select the folder.
+    </p>
   </div>
 
+  <!-- Exam form (hidden until fullscreen) -->
   <form method="post" id="exam-form" style="display:none">
     {% for q in questions %}
-      <div class="mb-3">
-        <p><strong>Q{{ loop.index }}.</strong> {{ q.text }}</p>
+      <div class="question-card">
+        <div class="q-label">Question {{ loop.index }} of {{ questions | length }}</div>
+        <div class="q-text">{{ q.text }}</div>
         {% for choice in q.choices %}
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="question_{{ q.id }}" id="q{{ q.id }}_{{ loop.index0 }}" value="{{ loop.index0 }}"
-              {% if saved_answers and (q.id|string) in saved_answers and saved_answers[q.id|string] is not none and saved_answers[q.id|string] == loop.index0 %}checked{% endif %}>
+          <div class="choice-option">
+            <input class="form-check-input" type="radio" name="question_{{ q.id }}"
+                   id="q{{ q.id }}_{{ loop.index0 }}" value="{{ loop.index0 }}"
+                   {% if saved_answers and (q.id|string) in saved_answers
+                      and saved_answers[q.id|string] is not none
+                      and saved_answers[q.id|string] == loop.index0 %}checked{% endif %}>
             <label class="form-check-label" for="q{{ q.id }}_{{ loop.index0 }}">{{ choice }}</label>
           </div>
         {% endfor %}
       </div>
     {% endfor %}
-    <button class="btn btn-primary" type="submit">Submit Exam</button>
+    <div class="mt-4">
+      <button class="btn btn-primary btn-lg" type="submit">
+        <i class="bi bi-send-check me-2"></i>Submit Exam
+      </button>
+    </div>
   </form>
 
   <script>
@@ -117,28 +241,29 @@
 
     function updateTimer(){
       const now = Date.now();
+      const timerEl = document.getElementById('timer');
+      const timerText = document.getElementById('timer-text');
       let text = '';
       if(lecturerStartedMs){
-        text += `Lecturer started: ${new Date(lecturerStartedMs).toLocaleString()}. `;
+        text += `Exam started: ${new Date(lecturerStartedMs).toLocaleTimeString()}. `;
       }
       if(startedAtMs){
         const elapsed = now - startedAtMs;
-        text += `You started: ${new Date(startedAtMs).toLocaleString()} (Elapsed: ${formatTime(elapsed)}). `;
+        text += `Your timer: ${formatTime(elapsed)} elapsed. `;
       }
       if(deadlineMs){
         const remaining = deadlineMs - now;
         if(remaining <= 0){
-          text += 'Time left: 0s';
-          document.getElementById('timer').innerText = text;
-          // auto-submit form
+          timerText.textContent = 'Time is up! Submitting…';
           const f = document.querySelector('form');
           if(f){ f.submit(); }
           return;
         } else {
           text += `Time left: ${formatTime(remaining)}`;
+          if(remaining < 300000) { timerEl.classList.add('urgent'); }
         }
       }
-      document.getElementById('timer').innerText = text;
+      timerText.textContent = text || 'Timer running…';
     }
 
     // autosave answers every 30 seconds

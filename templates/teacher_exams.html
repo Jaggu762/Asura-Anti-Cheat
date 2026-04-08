@@ -1,63 +1,114 @@
 {% extends 'base.html' %}
-{% block title %}My Exams{% endblock %}
+{% block title %}My Exams — Asura{% endblock %}
 {% block content %}
-  <h2>My Exams</h2>
+
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-journal-text"></i></div>
+    <div class="ph-text">
+      <h2>My Exams</h2>
+      <p>Create, manage, and monitor your examinations</p>
+    </div>
+  </div>
+
   {% if current_user.role in ['lecturer','admin'] %}
-    <p><a class="btn btn-success" href="{{ url_for('create_exam') }}">Create Exam</a></p>
+    <div class="mb-4">
+      <a class="btn btn-success" href="{{ url_for('create_exam') }}">
+        <i class="bi bi-plus-circle me-2"></i>Create Exam
+      </a>
+    </div>
   {% endif %}
-  <table class="table">
-    <thead><tr><th>ID</th><th>Title</th><th>Batch</th><th>Status</th><th>Started</th><th>Duration (min)</th><th>Actions</th></tr></thead>
-    <tbody>
-      {% for info in exams %}
-        {% set e = info.exam %}
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{ e.id }}</td>
-          <td>{{ e.title }}</td>
-          <td>{{ e.batch_id }}</td>
-          <td>
-            {% if info.status == 'not_started' %}
-              <span class="badge bg-secondary">Not started</span>
-            {% elif info.status == 'started' %}
-              <span class="badge bg-success">Started</span>
-              {% if info.has_active_attempts %}
-                <span class="badge bg-danger ms-1" title="Students taking exam">🔴 Live</span>
-              {% endif %}
-            {% else %}
-              <span class="badge bg-primary">Finished</span>
-            {% endif %}
-          </td>
-          <td>{% if info.started_at %}{{ info.started_at }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
-          <td>{{ e.duration_minutes }}</td>
-          <td>
-            <a class="btn btn-sm btn-primary" href="{{ url_for('add_question', exam_id=e.id) }}">Add Question</a>
-            <a class="btn btn-sm btn-secondary" href="{{ url_for('manage_questions', exam_id=e.id) }}">Manage Questions</a>
-            <a class="btn btn-sm btn-info" href="{{ url_for('teacher_exam_attempts', exam_id=e.id) }}">View Attempts</a>
-            <a class="btn btn-sm btn-warning" href="{{ url_for('exam_ai_alerts', exam_id=e.id) }}">
-              🚨 AI Alerts
-              {% if info.alert_count and info.alert_count > 0 %}
-                <span class="badge bg-danger">{{ info.alert_count }}</span>
-              {% endif %}
-            </a>
-            {% if info.status == 'not_started' %}
-              <form method="post" action="{{ url_for('start_exam_by_teacher', exam_id=e.id) }}" style="display:inline">
-                <button class="btn btn-sm btn-success" type="submit">Start</button>
-              </form>
-            {% endif %}
-            {# Publish results control - only for lecturer/admin #}
-            {% if current_user.role in ['lecturer','admin'] %}
-              <form method="post" action="{{ url_for('publish_results', exam_id=e.id) }}" style="display:inline">
-                {% if e.results_published %}
-                  <input type="hidden" name="publish" value="0">
-                  <button class="btn btn-sm btn-warning" type="submit">Unpublish Results</button>
-                {% else %}
-                  <input type="hidden" name="publish" value="1">
-                  <button class="btn btn-sm btn-outline-success" type="submit">Publish Results</button>
-                {% endif %}
-              </form>
-            {% endif %}
-          </td>
+          <th>Title</th>
+          <th>Batch</th>
+          <th>Status</th>
+          <th>Started</th>
+          <th>Duration</th>
+          <th>Actions</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for info in exams %}
+          {% set e = info.exam %}
+          <tr>
+            <td>
+              <strong>{{ e.title }}</strong>
+              <div style="font-size:.78rem;color:var(--txt-muted);">ID #{{ e.id }}</div>
+            </td>
+            <td><span class="badge bg-secondary">{{ e.batch_id }}</span></td>
+            <td>
+              {% if info.status == 'not_started' %}
+                <span class="badge bg-secondary">Not started</span>
+              {% elif info.status == 'started' %}
+                <span class="badge bg-success">Live</span>
+                {% if info.has_active_attempts %}
+                  <span class="badge bg-danger ms-1" title="Students actively taking exam">
+                    <i class="bi bi-circle-fill me-1" style="font-size:.55rem;"></i>Live
+                  </span>
+                {% endif %}
+              {% else %}
+                <span class="badge bg-info">Finished</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--txt-secondary);font-size:.85rem;">
+              {% if info.started_at %}{{ info.started_at }}{% else %}<span style="color:var(--txt-muted);">—</span>{% endif %}
+            </td>
+            <td style="color:var(--txt-secondary);">{{ e.duration_minutes }} min</td>
+            <td>
+              <div class="d-flex flex-wrap gap-1">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('add_question', exam_id=e.id) }}" title="Add Question">
+                  <i class="bi bi-plus"></i>
+                </a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('manage_questions', exam_id=e.id) }}" title="Manage Questions">
+                  <i class="bi bi-list-ul"></i>
+                </a>
+                <a class="btn btn-sm btn-info" href="{{ url_for('teacher_exam_attempts', exam_id=e.id) }}" title="View Attempts">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a class="btn btn-sm btn-warning" href="{{ url_for('exam_ai_alerts', exam_id=e.id) }}" title="AI Alerts">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  {% if info.alert_count and info.alert_count > 0 %}
+                    <span class="badge bg-danger ms-1">{{ info.alert_count }}</span>
+                  {% endif %}
+                </a>
+                {% if info.status == 'not_started' %}
+                  <form method="post" action="{{ url_for('start_exam_by_teacher', exam_id=e.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-success" type="submit" title="Start Exam">
+                      <i class="bi bi-play-fill"></i>
+                    </button>
+                  </form>
+                {% endif %}
+                {% if current_user.role in ['lecturer','admin'] %}
+                  <form method="post" action="{{ url_for('publish_results', exam_id=e.id) }}" style="display:inline">
+                    {% if e.results_published %}
+                      <input type="hidden" name="publish" value="0">
+                      <button class="btn btn-sm btn-outline-warning" type="submit" title="Unpublish Results">
+                        <i class="bi bi-eye-slash"></i>
+                      </button>
+                    {% else %}
+                      <input type="hidden" name="publish" value="1">
+                      <button class="btn btn-sm btn-outline-success" type="submit" title="Publish Results">
+                        <i class="bi bi-send-check"></i>
+                      </button>
+                    {% endif %}
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" style="text-align:center;padding:2.5rem !important;color:var(--txt-muted);">
+              <i class="bi bi-journal-x d-block mb-2" style="font-size:1.5rem;"></i>
+              No exams found
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 {% endblock %}

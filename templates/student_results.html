@@ -1,41 +1,85 @@
 {% extends 'base.html' %}
-{% block title %}My Results{% endblock %}
+{% block title %}My Results — Asura{% endblock %}
 {% block content %}
-  <h2>My Results</h2>
+
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-bar-chart"></i></div>
+    <div class="ph-text">
+      <h2>My Results</h2>
+      <p>Your examination history and scores</p>
+    </div>
+  </div>
+
   {% if attempts %}
-    <table class="table table-sm table-striped">
-      <thead>
-        <tr><th>#</th><th>Exam</th><th>Started</th><th>Finished</th><th>Score</th><th>Actions</th></tr>
-      </thead>
-      <tbody>
-        {% for row in attempts %}
-          {% set a = row.attempt %}
-          {% set e = row.exam %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
           <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ e.title if e else ('Exam ' ~ a.exam_id) }}</td>
-            <td>{{ a.started_at }}</td>
-            <td>{{ a.finished_at or 'In progress' }}</td>
-            <td>
-              {% if e and e.results_published %}
-                {% if a.score is not none %}
-                  {{ '{:.2f}%'.format(a.score) }}
-                  {% if row.is_terminated %}
-                    <br><span class="badge bg-danger mt-1">⚠️ TERMINATED - Cheating Detected</span>
+            <th>#</th>
+            <th>Exam</th>
+            <th>Started</th>
+            <th>Finished</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in attempts %}
+            {% set a = row.attempt %}
+            {% set e = row.exam %}
+            <tr>
+              <td style="color:var(--txt-muted);font-size:.82rem;">{{ loop.index }}</td>
+              <td><strong>{{ e.title if e else ('Exam #' ~ a.exam_id) }}</strong></td>
+              <td style="color:var(--txt-secondary);font-size:.85rem;">{{ a.started_at }}</td>
+              <td style="color:var(--txt-secondary);font-size:.85rem;">
+                {% if a.finished_at %}
+                  {{ a.finished_at }}
+                {% else %}
+                  <span class="badge bg-info">In progress</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if e and e.results_published %}
+                  {% if a.score is not none %}
+                    <span class="score-pill {% if a.score >= 70 %}score-good{% elif a.score >= 50 %}score-mid{% else %}score-low{% endif %}">
+                      {{ '{:.1f}%'.format(a.score) }}
+                    </span>
+                    {% if row.is_terminated %}
+                      <div class="mt-1">
+                        <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terminated</span>
+                      </div>
+                    {% endif %}
+                  {% else %}
+                    <span style="color:var(--txt-muted);">—</span>
                   {% endif %}
                 {% else %}
-                  -
+                  <span style="color:var(--txt-muted);font-style:italic;font-size:.85rem;">Not published</span>
                 {% endif %}
-              {% else %}
-                <em>Not published</em>
-              {% endif %}
-            </td>
-            <td>-</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
-    <p>No attempts found.</p>
+    <div class="card">
+      <div class="card-body text-center" style="padding:2.5rem !important;">
+        <i class="bi bi-clipboard-x" style="font-size:2rem;color:var(--txt-muted);display:block;margin-bottom:1rem;"></i>
+        <p style="margin-bottom:0;color:var(--txt-muted);">No exam attempts found.</p>
+      </div>
+    </div>
   {% endif %}
+
+  <style>
+    .score-pill {
+      display: inline-block;
+      padding: .25em .75em;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: .85rem;
+    }
+    .score-good { background: rgba(34,197,94,.14); color: #4ade80; border: 1px solid rgba(34,197,94,.22); }
+    .score-mid  { background: rgba(251,191,36,.14); color: #fcd34d; border: 1px solid rgba(251,191,36,.22); }
+    .score-low  { background: rgba(239,68,68,.14);  color: #fca5a5; border: 1px solid rgba(239,68,68,.22); }
+  </style>
+
 {% endblock %}

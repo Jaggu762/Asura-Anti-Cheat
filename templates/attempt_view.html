@@ -1,44 +1,142 @@
 {% extends 'base.html' %}
-{% block title %}Attempt Details{% endblock %}
+{% block title %}Attempt Details — Asura{% endblock %}
 {% block content %}
-  <h2>Attempt by {{ attempt_user }}</h2>
-  <p>
-    <a class="btn btn-sm btn-outline-info" href="{{ url_for('view_attempt_events', attempt_id=attempt.id) }}">View Activity Log</a>
-    {% if current_user.role in ['lecturer','staff','admin'] %}
-      <a class="btn btn-sm btn-outline-warning" href="{{ url_for('live_attempt_events', attempt_id=attempt.id) }}">Live Monitor</a>
-    {% endif %}
-    {% if attempt.has_suspicious_activity %}
-      <span class="badge bg-danger ms-2">⚠️ Suspicious Activity Detected</span>
-    {% endif %}
-  </p>
-  <p>Started: {{ attempt.started_at }} | Finished: {{ attempt.finished_at or 'In progress' }} | Score: {{ attempt.score if attempt.score is not none else '-' }}</p>
 
-  <h4>Answers</h4>
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-person-lines-fill"></i></div>
+    <div class="ph-text">
+      <h2>Attempt by {{ attempt_user }}</h2>
+      <p>Detailed view of exam attempt</p>
+    </div>
+  </div>
+
+  <!-- Meta bar -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-sm-4">
+          <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.6px;color:var(--txt-muted);font-weight:600;margin-bottom:.35rem;">Started</div>
+          <div style="color:var(--txt-primary);">{{ attempt.started_at }}</div>
+        </div>
+        <div class="col-sm-4">
+          <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.6px;color:var(--txt-muted);font-weight:600;margin-bottom:.35rem;">Finished</div>
+          <div style="color:var(--txt-primary);">
+            {{ attempt.finished_at or '—' }}
+            {% if not attempt.finished_at %}<span class="badge bg-info ms-2">In Progress</span>{% endif %}
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.6px;color:var(--txt-muted);font-weight:600;margin-bottom:.35rem;">Score</div>
+          <div>
+            {% if attempt.score is not none %}
+              <span style="font-size:1.1rem;font-weight:700;color:{% if attempt.score >= 70 %}var(--clr-success){% elif attempt.score >= 50 %}var(--clr-warning){% else %}var(--clr-danger){% endif %};">
+                {{ attempt.score }}%
+              </span>
+            {% else %}
+              <span style="color:var(--txt-muted);">Not graded</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if attempt.has_suspicious_activity %}
+        <div class="mt-3 pt-3" style="border-top:1px solid var(--border);">
+          <span class="badge bg-danger">
+            <i class="bi bi-exclamation-triangle me-1"></i>Suspicious Activity Detected
+          </span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="mb-4 d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-info btn-sm" href="{{ url_for('view_attempt_events', attempt_id=attempt.id) }}">
+      <i class="bi bi-file-text me-1"></i>Activity Log
+    </a>
+    {% if current_user.role in ['lecturer','staff','admin'] %}
+      <a class="btn btn-outline-warning btn-sm" href="{{ url_for('live_attempt_events', attempt_id=attempt.id) }}">
+        <i class="bi bi-broadcast me-1"></i>Live Monitor
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Answers -->
+  <h4 class="mb-3"><i class="bi bi-list-check me-2" style="color:var(--accent);"></i>Answers</h4>
+
   {% if answers %}
-    {% for q in questions %}
-      <div class="mb-3">
-        <p><strong>Q{{ loop.index }}.</strong> {{ q.text }}</p>
-        <ul>
-          {% for choice in q.choices %}
-            <li {% if loop.index0 == q.correct %}class="text-success"{% endif %}>
-              {{ choice }} {% if answers[q.id|string] is not none and answers[q.id|string] == loop.index0 %}<strong>(selected)</strong>{% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endfor %}
+    <div class="d-flex flex-column gap-3 mb-4">
+      {% for q in questions %}
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;color:var(--txt-muted);font-weight:600;margin-bottom:.5rem;">
+              Question {{ loop.index }}
+            </div>
+            <p style="color:var(--txt-primary);font-weight:500;margin-bottom:.875rem;">{{ q.text }}</p>
+            <div class="d-flex flex-column gap-2">
+              {% for choice in q.choices %}
+                {% set is_correct = loop.index0 == q.correct %}
+                {% set is_selected = answers[q.id|string] is not none and answers[q.id|string] == loop.index0 %}
+                <div class="choice-row
+                  {% if is_correct %}choice-correct{% endif %}
+                  {% if is_selected and not is_correct %}choice-wrong{% endif %}">
+                  <span class="choice-dot">
+                    {% if is_correct %}<i class="bi bi-check-lg"></i>
+                    {% elif is_selected %}<i class="bi bi-x-lg"></i>
+                    {% else %}○{% endif %}
+                  </span>
+                  <span>{{ choice }}</span>
+                  {% if is_selected %}<span class="ms-2" style="font-size:.78rem;font-weight:600;">(selected)</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
   {% else %}
-    <p>No answers recorded.</p>
+    <div class="card mb-4">
+      <div class="card-body text-center" style="padding:2rem !important;color:var(--txt-muted);">No answers recorded.</div>
+    </div>
   {% endif %}
+
   {% if can_mark %}
-    <hr>
-    <h4>Manual Marking</h4>
-    <form method="post" action="{{ url_for('mark_attempt', attempt_id=attempt.id) }}">
-      <div class="mb-3">
-        <label class="form-label">Score (0-100)</label>
-        <input class="form-control" name="score" value="{{ attempt.score if attempt.score is not none else '' }}">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-pencil-square me-2" style="color:var(--accent);"></i>Manual Marking</h5>
+        <form method="post" action="{{ url_for('mark_attempt', attempt_id=attempt.id) }}">
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-4">
+              <label class="form-label">Score (0–100)</label>
+              <input class="form-control" name="score" type="number" min="0" max="100"
+                     value="{{ attempt.score if attempt.score is not none else '' }}" placeholder="e.g. 85">
+            </div>
+            <div class="col-sm-auto">
+              <button class="btn btn-primary">
+                <i class="bi bi-floppy me-2"></i>Save Mark
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-      <button class="btn btn-primary">Save Mark</button>
-    </form>
+    </div>
   {% endif %}
+
+  <style>
+    .choice-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .45rem .75rem;
+      border-radius: var(--r-sm);
+      font-size: .9rem;
+      color: var(--txt-secondary);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+    .choice-correct { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.25); color: #86efac; }
+    .choice-wrong   { background: rgba(239,68,68,.1);  border-color: rgba(239,68,68,.25);  color: #fca5a5; }
+    .choice-dot { font-size: .82rem; flex-shrink: 0; width: 16px; text-align: center; }
+  </style>
+
 {% endblock %}

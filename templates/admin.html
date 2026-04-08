@@ -1,38 +1,99 @@
 {% extends 'base.html' %}
-{% block title %}Admin - Anti-Cheat{% endblock %}
+{% block title %}Admin — Asura{% endblock %}
 {% block content %}
-  <h2>Admin Dashboard</h2>
-  <p><a class="btn btn-success" href="{{ url_for('add_user') }}">Add User</a></p>
 
-  <div class="mb-3">
-    <h5>Admin Actions</h5>
-    <a class="btn btn-outline-secondary me-2" href="{{ url_for('change_own_password') }}">Change my password</a>
-    <a class="btn btn-outline-info me-2" href="{{ url_for('export_users') }}">Export users (CSV)</a>
-    <a class="btn btn-outline-warning" href="{{ url_for('manage_batches') }}">Manage batches</a>
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-shield-lock"></i></div>
+    <div class="ph-text">
+      <h2>Admin Dashboard</h2>
+      <p>Manage users, batches, and system settings</p>
+    </div>
   </div>
 
-  <table class="table table-striped">
-    <thead>
-      <tr><th>ID</th><th>Username</th><th>Role</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-      {% for u in users %}
+  <!-- Quick actions toolbar -->
+  <div class="card mb-4">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+      <a class="btn btn-success" href="{{ url_for('add_user') }}">
+        <i class="bi bi-person-plus me-2"></i>Add User
+      </a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('change_own_password') }}">
+        <i class="bi bi-key me-2"></i>Change Password
+      </a>
+      <a class="btn btn-outline-info" href="{{ url_for('export_users') }}">
+        <i class="bi bi-download me-2"></i>Export Users (CSV)
+      </a>
+      <a class="btn btn-outline-warning" href="{{ url_for('manage_batches') }}">
+        <i class="bi bi-collection me-2"></i>Manage Batches
+      </a>
+    </div>
+  </div>
+
+  <!-- Users table -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="mb-0"><i class="bi bi-people me-2" style="color:var(--accent);"></i>All Users</h4>
+    <span class="badge bg-secondary">{{ users | length }} total</span>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{ u.id }}</td>
-          <td>{{ u.username }}</td>
-          <td>{{ u.role }}</td>
-          <td>
-            <a class="btn btn-sm btn-primary" href="{{ url_for('edit_user', user_id=u.id) }}">Edit</a>
-            {% if current_user.id != u.id %}
-              <form method="post" action="{{ url_for('delete_user', user_id=u.id) }}" style="display:inline" onsubmit="return confirm('Delete user {{ u.username }}?');">
-                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
-              </form>
-            {% else %}
-              <button class="btn btn-sm btn-secondary" disabled>Delete</button>
-            {% endif %}
-          </td>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Role</th>
+          <th style="text-align:right;">Actions</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td style="color:var(--txt-muted);font-size:.82rem;">{{ u.id }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="avatar-dot" style="
+                  width:28px;height:28px;border-radius:50%;
+                  background:var(--accent-dim);border:1px solid var(--border-strong);
+                  display:inline-flex;align-items:center;justify-content:center;
+                  font-size:.72rem;font-weight:700;color:var(--accent);flex-shrink:0;">
+                  {{ u.username[0]|upper }}
+                </span>
+                <span>{{ u.username }}</span>
+              </div>
+            </td>
+            <td>
+              {% if u.role == 'admin' %}
+                <span class="badge bg-danger">{{ u.role }}</span>
+              {% elif u.role == 'lecturer' %}
+                <span class="badge bg-info">{{ u.role }}</span>
+              {% elif u.role == 'staff' %}
+                <span class="badge bg-warning">{{ u.role }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ u.role }}</span>
+              {% endif %}
+            </td>
+            <td style="text-align:right;">
+              <div class="d-flex gap-2 justify-content-end">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('edit_user', user_id=u.id) }}">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% if current_user.id != u.id %}
+                  <form method="post" action="{{ url_for('delete_user', user_id=u.id) }}" style="display:inline"
+                        onsubmit="return confirm('Delete user {{ u.username }}? This cannot be undone.');">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit" style="color:var(--clr-danger);border-color:rgba(248,113,113,.3);">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </form>
+                {% else %}
+                  <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot delete yourself">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 {% endblock %}

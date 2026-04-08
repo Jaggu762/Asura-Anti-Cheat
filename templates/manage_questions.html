@@ -1,49 +1,93 @@
 {% extends 'base.html' %}
-{% block title %}Manage Questions{% endblock %}
+{% block title %}Manage Questions — Asura{% endblock %}
 {% block content %}
-  <h2>Manage Questions for: {{ exam.title }}</h2>
-  <p><a class="btn btn-secondary" href="{{ url_for('teacher_exams') }}">Back to Exams</a></p>
 
-  <h4>Existing Questions</h4>
-  {% for q in questions %}
-    <form method="post" class="mb-3">
-      <input type="hidden" name="op" value="edit">
-      <input type="hidden" name="question_id" value="{{ q.id }}">
-      <div class="mb-2">
-        <label class="form-label">Question text</label>
-        <textarea class="form-control" name="text">{{ q.text }}</textarea>
-      </div>
-      <div class="mb-2">
-        <label class="form-label">Choices (one per line)</label>
-        <textarea class="form-control" name="choices">{% for c in q.choices_list %}{{ c }}
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-list-ul"></i></div>
+    <div class="ph-text">
+      <h2>Manage Questions</h2>
+      <p>Exam: <strong style="color:var(--txt-primary);">{{ exam.title }}</strong></p>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('teacher_exams') }}">
+      <i class="bi bi-arrow-left me-1"></i>Back to Exams
+    </a>
+  </div>
+
+  {% if questions %}
+    <h5 class="mb-3" style="color:var(--txt-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:.7px;">
+      Existing Questions ({{ questions | length }})
+    </h5>
+    <div class="d-flex flex-column gap-3 mb-5">
+      {% for q in questions %}
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:.75rem;color:var(--txt-muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:.75rem;">
+              Question {{ loop.index }}
+            </div>
+            <form method="post">
+              <input type="hidden" name="op" value="edit">
+              <input type="hidden" name="question_id" value="{{ q.id }}">
+              <div class="mb-3">
+                <label class="form-label">Question Text</label>
+                <textarea class="form-control" name="text" rows="2">{{ q.text }}</textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Choices (one per line)</label>
+                <textarea class="form-control" name="choices" rows="4">{% for c in q.choices_list %}{{ c }}
 {% endfor %}</textarea>
-      </div>
-      <div class="mb-2">
-        <label class="form-label">Correct answer index (0-based)</label>
-        <input class="form-control" name="correct" value="{{ q.correct }}">
-      </div>
-      <button class="btn btn-primary btn-sm" type="submit">Save</button>
-      <button class="btn btn-danger btn-sm" name="op" value="delete" formmethod="post">Delete</button>
-    </form>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Correct Answer Index (0-based)</label>
+                <input class="form-control" name="correct" value="{{ q.correct }}" style="max-width:120px;">
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-primary" type="submit">
+                  <i class="bi bi-floppy me-1"></i>Save
+                </button>
+                <button class="btn btn-sm btn-danger" name="op" value="delete" formmethod="post"
+                        onclick="return confirm('Delete this question?')">
+                  <i class="bi bi-trash3 me-1"></i>Delete
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
   {% else %}
-    <p>No questions yet.</p>
-  {% endfor %}
+    <div class="alert alert-info mb-4">
+      <i class="bi bi-info-circle me-2"></i>No questions yet. Add the first one below.
+    </div>
+  {% endif %}
 
-  <h4>Add New Question</h4>
-  <form method="post">
-    <input type="hidden" name="op" value="add">
-    <div class="mb-2">
-      <label class="form-label">Question text</label>
-      <textarea class="form-control" name="text"></textarea>
+  <!-- Add new -->
+  <h5 class="mb-3" style="color:var(--txt-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:.7px;">
+    Add New Question
+  </h5>
+  <div class="card">
+    <div class="card-body">
+      <form method="post">
+        <input type="hidden" name="op" value="add">
+        <div class="mb-3">
+          <label class="form-label">Question Text</label>
+          <textarea class="form-control" name="text" rows="2" placeholder="Enter the question…"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Choices (one per line)</label>
+          <textarea class="form-control" name="choices" rows="4" placeholder="One choice per line…"></textarea>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Correct Answer Index (0-based)</label>
+          <input class="form-control" name="correct" placeholder="e.g. 0" style="max-width:120px;">
+        </div>
+        <button class="btn btn-success" type="submit">
+          <i class="bi bi-plus-lg me-2"></i>Add Question
+        </button>
+      </form>
     </div>
-    <div class="mb-2">
-      <label class="form-label">Choices (one per line)</label>
-      <textarea class="form-control" name="choices"></textarea>
-    </div>
-    <div class="mb-2">
-      <label class="form-label">Correct answer index (0-based)</label>
-      <input class="form-control" name="correct">
-    </div>
-    <button class="btn btn-success" type="submit">Add Question</button>
-  </form>
+  </div>
+
 {% endblock %}

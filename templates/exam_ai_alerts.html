@@ -1,54 +1,57 @@
 <!-- filepath: s:\Semester 6\ST6047CEM Cyber Security Project\CODE\templates\exam_ai_alerts.html -->
 {% extends 'base.html' %}
-{% block title %}AI Alerts - {{ exam.title }}{% endblock %}
+{% block title %}AI Alerts — {{ exam.title }}{% endblock %}
 {% block content %}
-  <h2>🚨 AI-Detected Suspicious Activity</h2>
-  <h4>Exam: {{ exam.title }}</h4>
-  <p>
-    <a class="btn btn-secondary" href="{{ url_for('teacher_exams') }}">Back to Exams</a>
-    <a class="btn btn-info" href="{{ url_for('teacher_exam_attempts', exam_id=exam.id) }}">View All Attempts</a>
-  </p>
 
-  <div class="alert-summary mb-4">
-    <div class="row">
-      <div class="col-md-3">
-        <div class="card text-center border-danger">
-          <div class="card-body">
-            <h5 class="card-title text-danger">{{ stats.critical }}</h5>
-            <p class="card-text">Critical Alerts</p>
-          </div>
-        </div>
+  <div class="ph">
+    <div class="ph-icon"><i class="bi bi-exclamation-triangle" style="color:var(--clr-danger);"></i></div>
+    <div class="ph-text">
+      <h2>AI-Detected Suspicious Activity</h2>
+      <p>Exam: <strong style="color:var(--txt-primary);">{{ exam.title }}</strong></p>
+    </div>
+  </div>
+
+  <div class="mb-3 d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-secondary" href="{{ url_for('teacher_exams') }}">
+      <i class="bi bi-arrow-left me-2"></i>Back to Exams
+    </a>
+    <a class="btn btn-outline-info" href="{{ url_for('teacher_exam_attempts', exam_id=exam.id) }}">
+      <i class="bi bi-people me-2"></i>All Attempts
+    </a>
+  </div>
+
+  <!-- Stats row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card border-danger text-center">
+        <div class="stat-value" style="color:var(--clr-danger);">{{ stats.critical }}</div>
+        <div class="stat-label">Critical</div>
       </div>
-      <div class="col-md-3">
-        <div class="card text-center border-warning">
-          <div class="card-body">
-            <h5 class="card-title text-warning">{{ stats.high }}</h5>
-            <p class="card-text">High Risk</p>
-          </div>
-        </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card border-warning text-center">
+        <div class="stat-value" style="color:var(--clr-warning);">{{ stats.high }}</div>
+        <div class="stat-label">High Risk</div>
       </div>
-      <div class="col-md-3">
-        <div class="card text-center border-info">
-          <div class="card-body">
-            <h5 class="card-title text-info">{{ stats.medium }}</h5>
-            <p class="card-text">Medium Risk</p>
-          </div>
-        </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card border-info text-center">
+        <div class="stat-value" style="color:var(--clr-info);">{{ stats.medium }}</div>
+        <div class="stat-label">Medium Risk</div>
       </div>
-      <div class="col-md-3">
-        <div class="card text-center border-secondary">
-          <div class="card-body">
-            <h5 class="card-title">{{ stats.total_students }}</h5>
-            <p class="card-text">Students Monitored</p>
-          </div>
-        </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card border-secondary text-center">
+        <div class="stat-value" style="color:var(--txt-primary);">{{ stats.total_students }}</div>
+        <div class="stat-label">Monitored</div>
       </div>
     </div>
   </div>
 
-  <div class="mb-3">
-    <label>Filter by Severity:</label>
-    <select class="form-select" id="severityFilter" onchange="filterAlerts()">
+  <!-- Filter -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <label class="form-label mb-0" style="white-space:nowrap;">Filter:</label>
+    <select class="form-select" id="severityFilter" onchange="filterAlerts()" style="max-width:220px;">
       <option value="all">All Severities</option>
       <option value="CRITICAL">Critical Only</option>
       <option value="HIGH">High Risk</option>
@@ -61,42 +64,57 @@
       {% for alert in alerts %}
         <div class="card mb-3 alert-card" data-severity="{{ alert.severity }}">
           <div class="card-header d-flex justify-content-between align-items-center
-            {% if alert.severity == 'CRITICAL' %}bg-danger text-white
+            {% if alert.severity == 'CRITICAL' %}bg-danger
             {% elif alert.severity == 'HIGH' %}bg-warning
-            {% elif alert.severity == 'MEDIUM' %}bg-info text-white
-            {% else %}bg-secondary text-white{% endif %}">
-            <div>
-              <strong>{{ alert.student_name }}</strong> (ID: {{ alert.student_id }})
-              <span class="badge bg-dark ms-2">{{ alert.severity }}</span>
+            {% elif alert.severity == 'MEDIUM' %}bg-info
+            {% else %}bg-secondary{% endif %}">
+            <div class="d-flex align-items-center gap-2">
+              {% if alert.severity == 'CRITICAL' %}<i class="bi bi-shield-x"></i>
+              {% elif alert.severity == 'HIGH' %}<i class="bi bi-exclamation-triangle"></i>
+              {% elif alert.severity == 'MEDIUM' %}<i class="bi bi-exclamation-circle"></i>
+              {% else %}<i class="bi bi-info-circle"></i>{% endif %}
+              <strong>{{ alert.student_name }}</strong>
+              <span style="opacity:.7;font-size:.8rem;">· ID: {{ alert.student_id }}</span>
+              <span class="badge bg-dark ms-1">{{ alert.severity }}</span>
             </div>
-            <small>{{ alert.timestamp }}</small>
+            <small style="opacity:.8;">{{ alert.timestamp }}</small>
           </div>
           <div class="card-body">
-            <h5 class="card-title">{{ alert.violation_type }}</h5>
-            <p class="card-text">{{ alert.description }}</p>
-            
-            <div class="violation-details">
-              <strong>Detected Activities:</strong>
-              <ul class="mb-2">
+            <h5 class="mb-2">{{ alert.violation_type }}</h5>
+            <p class="mb-3">{{ alert.description }}</p>
+
+            <div class="violation-details mb-3">
+              <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.6px;color:var(--txt-muted);font-weight:600;margin-bottom:.6rem;">
+                Detected Activities
+              </div>
+              <ul class="mb-0" style="padding-left:1.25rem;">
                 {% for activity in alert.activities %}
-                  <li>
+                  <li style="color:var(--txt-secondary);font-size:.88rem;margin-bottom:.35rem;">
                     <span class="badge bg-{{ activity.badge_color }} me-2">{{ activity.event }}</span>
                     {{ activity.description }}
-                    <small class="text-muted">({{ activity.count }} times)</small>
+                    <span style="color:var(--txt-muted);font-size:.78rem;">({{ activity.count }}×)</span>
                   </li>
                 {% endfor %}
               </ul>
             </div>
 
-            <div class="alert-actions mt-3">
-              <a href="{{ url_for('view_attempt_events', attempt_id=alert.attempt_id) }}" 
-                 class="btn btn-sm btn-primary">View Full Log</a>
-              <a href="{{ url_for('live_attempt_events', attempt_id=alert.attempt_id) }}" 
-                 class="btn btn-sm btn-warning">Live Monitor</a>
-              <button class="btn btn-sm btn-success" onclick="markAsReviewed({{ alert.id }})">Mark Reviewed</button>
-              <button class="btn btn-sm btn-secondary" onclick="markAsFalsePositive({{ alert.id }})">False Positive</button>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="{{ url_for('view_attempt_events', attempt_id=alert.attempt_id) }}"
+                 class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-file-text me-1"></i>Full Log
+              </a>
+              <a href="{{ url_for('live_attempt_events', attempt_id=alert.attempt_id) }}"
+                 class="btn btn-sm btn-outline-warning">
+                <i class="bi bi-broadcast me-1"></i>Live Monitor
+              </a>
+              <button class="btn btn-sm btn-outline-success" onclick="markAsReviewed({{ alert.id }})">
+                <i class="bi bi-check-circle me-1"></i>Mark Reviewed
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="markAsFalsePositive({{ alert.id }})">
+                <i class="bi bi-x-circle me-1"></i>False Positive
+              </button>
               <button class="btn btn-sm btn-danger" onclick="terminateExam({{ alert.attempt_id }}, '{{ alert.student_name }}')">
-                🚫 Terminate Exam
+                <i class="bi bi-stop-circle me-1"></i>Terminate
               </button>
             </div>
           </div>
@@ -105,50 +123,25 @@
     </div>
   {% else %}
     <div class="alert alert-success">
-      <h4>✅ No suspicious activity detected</h4>
-      <p>All students appear to be following exam protocols.</p>
+      <i class="bi bi-shield-fill-check me-2"></i>
+      <strong>No suspicious activity detected</strong> — All students appear to be following exam protocols.
     </div>
   {% endif %}
 
   <style>
-    /* Make every text in the main content area black, including numbers */
-    .alert-summary, .alert-summary *, .card, .card *, .form-label, .form-select, .alert, .alert * {
-      color: #000 !important;
-    }
-    .alert-card {
-      transition: transform 0.2s;
-    }
-    .alert-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
     .violation-details {
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-    .violation-details ul {
-      margin-bottom: 0;
-    }
-    /* Force black text and readable background for success alert */
-    .alert.alert-success {
-      color: #000 !important;
-      background-color: #e6f9ee !important;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: .875rem 1rem;
     }
   </style>
 
   <script>
     function filterAlerts() {
       const severity = document.getElementById('severityFilter').value;
-      const cards = document.querySelectorAll('.alert-card');
-      
-      cards.forEach(card => {
-        if (severity === 'all' || card.dataset.severity === severity) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
+      document.querySelectorAll('.alert-card').forEach(card => {
+        card.style.display = (severity === 'all' || card.dataset.severity === severity) ? '' : 'none';
       });
     }
 
@@ -159,14 +152,9 @@
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({status: 'reviewed', notes: notes})
-        }).then(response => response.json())
-        .then(data => {
-          alert(data.message || 'Alert marked as reviewed');
-          location.reload();
-        }).catch(err => {
-          console.error(err);
-          alert('Error updating alert');
-        });
+        }).then(r => r.json())
+          .then(d => { alert(d.message || 'Alert marked as reviewed'); location.reload(); })
+          .catch(() => alert('Error updating alert'));
       }
     }
 
@@ -176,20 +164,14 @@
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({status: 'false_positive'})
-        }).then(response => response.json())
-        .then(data => {
-          alert(data.message || 'Alert marked as false positive');
-          location.reload();
-        }).catch(err => {
-          console.error(err);
-          alert('Error updating alert');
-        });
+        }).then(r => r.json())
+          .then(d => { alert(d.message || 'Alert marked as false positive'); location.reload(); })
+          .catch(() => alert('Error updating alert'));
       }
     }
 
     function terminateExam(attemptId, studentName) {
-      if (confirm(`⚠️ TERMINATE EXAM for ${studentName}?\n\nThis will immediately end their exam due to cheating/violations. This action cannot be undone.`)) {
-        // Create a form and submit it
+      if (confirm(`⚠️ TERMINATE EXAM for ${studentName}?\n\nThis will immediately end their exam. This action cannot be undone.`)) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/teacher/attempt/${attemptId}/terminate`;
